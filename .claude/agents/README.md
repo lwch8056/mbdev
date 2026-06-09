@@ -13,6 +13,7 @@ Claude Code의 **서브에이전트(subagent)** 기능으로 구성한 가상 �
 | `architect.md` | 설계자 | 아키텍처, 모듈 구조, 기술 선택 |
 | `developer.md` | 개발자 | 실제 코드 작성/수정 |
 | `qa.md` | QA | 테스트, 검증, 코드 리뷰 |
+| `writer.md` | 문서 담당 | README, 가이드, API 문서, CHANGELOG |
 
 ## 권장 워크플로우
 
@@ -37,6 +38,9 @@ Claude Code의 **서브에이전트(subagent)** 기능으로 구성한 가상 �
 [QA] 검증·리뷰  ──(문제 발견)──▶ 다시 개발자
    │
    ▼
+[문서 담당] README·가이드·CHANGELOG 작성/갱신
+   │
+   ▼
  완료
 ```
 
@@ -50,6 +54,7 @@ Claude Code의 **서브에이전트(subagent)** 기능으로 구성한 가상 �
 - "designer로 로그인 화면 UI/UX를 설계해줘"
 - "architect한테 설계를 맡기고, developer로 구현해줘"
 - "qa로 방금 만든 코드를 검증해줘"
+- "writer로 이 기능 사용법을 README에 정리해줘"
 
 ## 커스터마이즈
 

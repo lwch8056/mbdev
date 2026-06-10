@@ -334,6 +334,30 @@ button {
   cursor: not-allowed;
 }
 
+.btn-gps {
+  width: 100%;
+  border: 1.5px solid var(--color-primary);
+  border-radius: var(--radius-btn);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  padding: var(--space-3);
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 700;
+  transition: background 0.15s ease;
+}
+
+.btn-gps:hover:not(:disabled) {
+  background: var(--color-surface-warm);
+}
+
+.btn-gps:disabled {
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .near-status {
   margin: 0;
   font-size: 13px;

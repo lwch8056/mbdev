@@ -107,6 +107,33 @@ export async function searchNearby({ dong, keyword }) {
   return { usingDummy: false, places: places.slice(0, MAX_RESULTS) };
 }
 
+// 좌표(현재 위치) + 메뉴로 근처 식당을 검색한다.
+// 반환: { usingDummy: boolean, regionName: string, places: [...] }
+export async function searchByLocation({ lat, lng, keyword }) {
+  if (!isApiEnabled()) {
+    return { usingDummy: true, regionName: "내 위치", places: dummyResults("내 위치", keyword) };
+  }
+  const kakao = await loadKakaoSdk();
+  const regionName = await coordToRegion(kakao, lat, lng);
+  const places = await keywordSearch(kakao, regionName || "내 위치", keyword, { x: lng, y: lat });
+  return { usingDummy: false, regionName, places: places.slice(0, MAX_RESULTS) };
+}
+
+// 좌표 → 동네 이름(역지오코딩). 못 찾으면 "".
+function coordToRegion(kakao, lat, lng) {
+  return new Promise((resolve) => {
+    const geocoder = new kakao.maps.services.Geocoder();
+    geocoder.coord2Address(lng, lat, (result, status) => {
+      if (status === kakao.maps.services.Status.OK && result[0]) {
+        const addr = result[0].address;
+        resolve(addr ? addr.region_3depth_name || addr.region_2depth_name || "" : "");
+      } else {
+        resolve("");
+      }
+    });
+  });
+}
+
 // ===== 샘플(더미) 데이터 =====
 // 키가 없을 때 화면 확인용으로 쓰는 가짜 식당 목록.
 // 링크는 실제 카카오맵 웹 검색으로 연결해 둬서 그대로도 쓸모 있게 했다.

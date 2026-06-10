@@ -1,7 +1,7 @@
 import { CATEGORIES, TYPES, MENUS } from "./data.js";
 import { pickRandom } from "./recommend.js";
 import { state, recomputeCandidates, resetFilters } from "./state.js";
-import { searchNearby, isApiEnabled } from "./restaurants.js";
+import { searchNearby, searchByLocation, isApiEnabled } from "./restaurants.js";
 
 // 마지막으로 입력한 동네를 저장하는 localStorage 키
 const DONG_STORAGE_KEY = "mbdev.dong";
@@ -25,6 +25,7 @@ const els = {
   nearTitle: document.getElementById("near-title"),
   dongInput: document.getElementById("dong-input"),
   nearBtn: document.getElementById("near-btn"),
+  gpsBtn: document.getElementById("gps-btn"),
   nearStatus: document.getElementById("near-status"),
   restoList: document.getElementById("resto-list"),
 };
@@ -223,6 +224,59 @@ async function handleNearSearch() {
   }
 }
 
+function setNearBusy(busy) {
+  els.nearBtn.disabled = busy;
+  els.gpsBtn.disabled = busy;
+}
+
+function handleGpsSearch() {
+  const menu = state.current;
+  if (!menu) return;
+
+  if (!navigator.geolocation) {
+    setNearStatus("이 브라우저는 위치 기능을 지원하지 않아요. 동네를 직접 입력해 주세요.");
+    return;
+  }
+
+  els.restoList.innerHTML = "";
+  setNearBusy(true);
+  setNearStatus("현재 위치를 확인하는 중…");
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const { latitude, longitude } = pos.coords;
+      setNearStatus(isApiEnabled() ? "근처 식당을 찾는 중…" : "샘플 데이터 불러오는 중…");
+      try {
+        const { usingDummy, regionName, places } = await searchByLocation({
+          lat: latitude,
+          lng: longitude,
+          keyword: menu.name,
+        });
+        // 알아낸 동네 이름을 입력창에 채우고 저장
+        if (regionName) {
+          els.dongInput.value = regionName;
+          saveDong(regionName);
+        }
+        renderRestaurants(places, usingDummy);
+      } catch (err) {
+        setNearStatus(err?.message ?? "검색 중 문제가 생겼어요.");
+      } finally {
+        setNearBusy(false);
+      }
+    },
+    (err) => {
+      setNearBusy(false);
+      const denied = err.code === err.PERMISSION_DENIED;
+      setNearStatus(
+        denied
+          ? "위치 권한이 거부됐어요. 동네를 직접 입력해 주세요."
+          : "현재 위치를 가져오지 못했어요. 동네를 직접 입력해 주세요."
+      );
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+  );
+}
+
 function saveDong(dong) {
   try {
     localStorage.setItem(DONG_STORAGE_KEY, dong);
@@ -339,6 +393,7 @@ function init() {
   // 근처 식당 검색
   els.dongInput.value = loadDong();
   els.nearBtn.addEventListener("click", handleNearSearch);
+  els.gpsBtn.addEventListener("click", handleGpsSearch);
   els.dongInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") handleNearSearch();
   });

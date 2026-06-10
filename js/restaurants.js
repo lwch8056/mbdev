@@ -97,41 +97,20 @@ function keywordSearch(kakao, dong, keyword, coords) {
 
 // 동네 + 메뉴로 근처 식당을 검색한다.
 // 반환: { usingDummy: boolean, places: [...] }
+// 키가 없거나 SDK 로드/검색이 실패하면 샘플(더미) 데이터로 폴백한다.
 export async function searchNearby({ dong, keyword }) {
   if (!isApiEnabled()) {
     return { usingDummy: true, places: dummyResults(dong, keyword) };
   }
-  const kakao = await loadKakaoSdk();
-  const coords = await geocode(kakao, dong);
-  const places = await keywordSearch(kakao, dong, keyword, coords);
-  return { usingDummy: false, places: places.slice(0, MAX_RESULTS) };
-}
-
-// 좌표(현재 위치) + 메뉴로 근처 식당을 검색한다.
-// 반환: { usingDummy: boolean, regionName: string, places: [...] }
-export async function searchByLocation({ lat, lng, keyword }) {
-  if (!isApiEnabled()) {
-    return { usingDummy: true, regionName: "내 위치", places: dummyResults("내 위치", keyword) };
+  try {
+    const kakao = await loadKakaoSdk();
+    const coords = await geocode(kakao, dong);
+    const places = await keywordSearch(kakao, dong, keyword, coords);
+    return { usingDummy: false, places: places.slice(0, MAX_RESULTS) };
+  } catch {
+    // SDK 로드 실패(도메인 미등록 등)·검색 실패 시 화면이 비지 않도록 샘플로 대체
+    return { usingDummy: true, places: dummyResults(dong, keyword) };
   }
-  const kakao = await loadKakaoSdk();
-  const regionName = await coordToRegion(kakao, lat, lng);
-  const places = await keywordSearch(kakao, regionName || "내 위치", keyword, { x: lng, y: lat });
-  return { usingDummy: false, regionName, places: places.slice(0, MAX_RESULTS) };
-}
-
-// 좌표 → 동네 이름(역지오코딩). 못 찾으면 "".
-function coordToRegion(kakao, lat, lng) {
-  return new Promise((resolve) => {
-    const geocoder = new kakao.maps.services.Geocoder();
-    geocoder.coord2Address(lng, lat, (result, status) => {
-      if (status === kakao.maps.services.Status.OK && result[0]) {
-        const addr = result[0].address;
-        resolve(addr ? addr.region_3depth_name || addr.region_2depth_name || "" : "");
-      } else {
-        resolve("");
-      }
-    });
-  });
 }
 
 // ===== 샘플(더미) 데이터 =====

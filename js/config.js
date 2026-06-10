@@ -11,7 +11,7 @@
 //
 // 비워두면("") 실제 API 대신 샘플(더미) 식당 데이터로 동작합니다.
 // 키를 넣는 순간 같은 화면이 그대로 실제 데이터로 전환됩니다.
-export const KAKAO_JS_KEY = "";
+export const KAKAO_JS_KEY = "ffadb19e6de2195880957aafe7ef81a1";
 
 // 좌표 기준 검색 반경(m). 동네를 좌표로 변환할 수 있을 때 적용됩니다.
 export const SEARCH_RADIUS = 2000;

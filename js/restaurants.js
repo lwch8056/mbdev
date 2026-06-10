@@ -6,27 +6,65 @@ import { KAKAO_JS_KEY, SEARCH_RADIUS, MAX_RESULTS } from "./config.js";
 // SDK는 처음 검색할 때 한 번만 로드한다(지연 로딩).
 let sdkPromise = null;
 
+// 외부 콜백/네트워크가 응답하지 않을 때 무한 대기를 막는 타임아웃(ms)
+const SDK_TIMEOUT = 8000;
+const SEARCH_TIMEOUT = 6000;
+
 // 카카오 키가 설정되어 있는지 여부
 export function isApiEnabled() {
   return typeof KAKAO_JS_KEY === "string" && KAKAO_JS_KEY.trim().length > 0;
 }
 
+// 프로미스가 일정 시간 안에 끝나지 않으면 reject (행 방지)
+function withTimeout(promise, ms, message) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms)),
+  ]);
+}
+
 // 카카오맵 JS SDK(services 라이브러리 포함) 로드
+// 어떤 경우든 반드시 resolve 또는 reject 되도록 보장한다(무한 대기 금지).
 function loadKakaoSdk() {
   if (sdkPromise) return sdkPromise;
   sdkPromise = new Promise((resolve, reject) => {
-    if (window.kakao && window.kakao.maps) {
+    if (window.kakao && window.kakao.maps && window.kakao.maps.services) {
       resolve(window.kakao);
       return;
     }
+
+    // 실패 시 캐시를 비워 다음 시도에서 다시 로드할 수 있게 한다.
+    const fail = (msg) => {
+      sdkPromise = null;
+      reject(new Error(msg));
+    };
+
+    const timer = setTimeout(
+      () => fail("카카오 지도 SDK 응답이 없어요. 키와 도메인 등록을 확인해 주세요."),
+      SDK_TIMEOUT
+    );
+
     const script = document.createElement("script");
     script.src =
       "https://dapi.kakao.com/v2/maps/sdk.js" +
       `?appkey=${encodeURIComponent(KAKAO_JS_KEY)}` +
       "&autoload=false&libraries=services";
-    script.onload = () => window.kakao.maps.load(() => resolve(window.kakao));
-    script.onerror = () =>
-      reject(new Error("카카오 지도 SDK를 불러오지 못했어요. 키와 도메인 등록을 확인해 주세요."));
+    script.onload = () => {
+      // 키가 잘못되면 스크립트는 로드돼도 window.kakao 가 없을 수 있다.
+      if (!window.kakao || !window.kakao.maps) {
+        clearTimeout(timer);
+        fail("카카오 SDK 초기화에 실패했어요. JavaScript 키를 확인해 주세요.");
+        return;
+      }
+      window.kakao.maps.load(() => {
+        clearTimeout(timer);
+        resolve(window.kakao);
+      });
+    };
+    script.onerror = () => {
+      clearTimeout(timer);
+      fail("카카오 지도 SDK를 불러오지 못했어요. 키와 도메인 등록을 확인해 주세요.");
+    };
     document.head.appendChild(script);
   });
   return sdkPromise;
@@ -104,8 +142,16 @@ export async function searchNearby({ dong, keyword }) {
   }
   try {
     const kakao = await loadKakaoSdk();
-    const coords = await geocode(kakao, dong);
-    const places = await keywordSearch(kakao, dong, keyword, coords);
+    const coords = await withTimeout(
+      geocode(kakao, dong),
+      SEARCH_TIMEOUT,
+      "위치 변환 응답이 없어요."
+    );
+    const places = await withTimeout(
+      keywordSearch(kakao, dong, keyword, coords),
+      SEARCH_TIMEOUT,
+      "식당 검색 응답이 없어요."
+    );
     return { usingDummy: false, places: places.slice(0, MAX_RESULTS) };
   } catch {
     // SDK 로드 실패(도메인 미등록 등)·검색 실패 시 화면이 비지 않도록 샘플로 대체

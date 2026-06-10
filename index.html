@@ -43,6 +43,25 @@
     <!-- 메인 버튼 -->
     <button type="button" class="btn-main" id="spin-btn">🎲 메뉴 추천받기</button>
 
+    <!-- 근처 식당 (메뉴 추천 후 노출) -->
+    <section class="near-section" id="near-section" hidden>
+      <h2 class="near-title" id="near-title">근처 식당 찾기</h2>
+      <div class="near-search">
+        <input
+          type="text"
+          id="dong-input"
+          class="dong-input"
+          inputmode="text"
+          autocomplete="off"
+          placeholder="동네 입력 (예: 역삼동, 서면)"
+          aria-label="동네 입력"
+        />
+        <button type="button" class="btn-near" id="near-btn">🔍 찾기</button>
+      </div>
+      <p class="near-status" id="near-status" hidden></p>
+      <ul class="resto-list" id="resto-list"></ul>
+    </section>
+
     <!-- 필터 헤더 -->
     <div class="filter-header">
       <h2 class="filter-title">필터</h2>

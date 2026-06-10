@@ -1,6 +1,10 @@
 import { CATEGORIES, TYPES, MENUS } from "./data.js";
 import { pickRandom } from "./recommend.js";
 import { state, recomputeCandidates, resetFilters } from "./state.js";
+import { searchNearby, isApiEnabled } from "./restaurants.js";
+
+// 마지막으로 입력한 동네를 저장하는 localStorage 키
+const DONG_STORAGE_KEY = "mbdev.dong";
 
 // --- DOM 참조 ---
 const els = {
@@ -17,6 +21,12 @@ const els = {
   categoryChips: document.getElementById("category-chips"),
   typeChips: document.getElementById("type-chips"),
   soloSwitch: document.getElementById("solo-switch"),
+  nearSection: document.getElementById("near-section"),
+  nearTitle: document.getElementById("near-title"),
+  dongInput: document.getElementById("dong-input"),
+  nearBtn: document.getElementById("near-btn"),
+  nearStatus: document.getElementById("near-status"),
+  restoList: document.getElementById("resto-list"),
 };
 
 const categoryLabel = (id) => CATEGORIES.find((c) => c.id === id)?.label ?? id;
@@ -90,6 +100,8 @@ function showEmptyState() {
   els.name.textContent = "조건에 맞는 메뉴가 없어요";
   els.tags.innerHTML = "";
   els.comment.textContent = "";
+  // 추천이 사라지면 근처 식당 섹션도 숨긴다.
+  els.nearSection.hidden = true;
 }
 
 function renderResult(menu) {
@@ -112,6 +124,119 @@ function renderResult(menu) {
   els.card.classList.remove("pop");
   void els.card.offsetWidth;
   els.card.classList.add("pop");
+
+  // 근처 식당 섹션 노출 (메뉴가 바뀌면 이전 결과는 비운다)
+  revealNearSection(menu);
+}
+
+// --- 근처 식당 ---
+function revealNearSection(menu) {
+  els.nearTitle.textContent = `‘${menu.name}’ 파는 근처 식당`;
+  els.restoList.innerHTML = "";
+  els.nearStatus.hidden = true;
+  els.nearSection.hidden = false;
+}
+
+function formatDistance(meters) {
+  if (meters == null) return "";
+  return meters < 1000 ? `${meters}m` : `${(meters / 1000).toFixed(1)}km`;
+}
+
+function setNearStatus(text) {
+  els.nearStatus.textContent = text;
+  els.nearStatus.hidden = !text;
+}
+
+function renderRestaurants(places, usingDummy) {
+  els.restoList.innerHTML = "";
+
+  if (places.length === 0) {
+    setNearStatus("근처에서 결과를 찾지 못했어요. 동네 이름을 바꿔 보세요.");
+    return;
+  }
+
+  setNearStatus(
+    usingDummy
+      ? "샘플 데이터예요. config.js에 카카오 JS 키를 넣으면 실제 식당이 나와요."
+      : ""
+  );
+
+  places.forEach((place) => {
+    const li = document.createElement("li");
+    li.className = "resto-item";
+
+    const main = document.createElement("div");
+    main.className = "resto-main";
+
+    const nameEl = place.url
+      ? document.createElement("a")
+      : document.createElement("span");
+    nameEl.className = "resto-name";
+    nameEl.textContent = place.name;
+    if (place.url) {
+      nameEl.href = place.url;
+      nameEl.target = "_blank";
+      nameEl.rel = "noopener noreferrer";
+    }
+    main.appendChild(nameEl);
+
+    if (place.category) {
+      const cat = document.createElement("span");
+      cat.className = "resto-cat";
+      cat.textContent = place.category;
+      main.appendChild(cat);
+    }
+    li.appendChild(main);
+
+    const meta = document.createElement("div");
+    meta.className = "resto-meta";
+    const dist = formatDistance(place.distance);
+    meta.textContent = [dist, place.address].filter(Boolean).join(" · ");
+    if (meta.textContent) li.appendChild(meta);
+
+    els.restoList.appendChild(li);
+  });
+}
+
+async function handleNearSearch() {
+  const dong = els.dongInput.value.trim();
+  const menu = state.current;
+  if (!menu) return;
+
+  if (!dong) {
+    setNearStatus("동네를 입력해 주세요.");
+    return;
+  }
+
+  saveDong(dong);
+  els.restoList.innerHTML = "";
+  els.nearBtn.disabled = true;
+  setNearStatus(isApiEnabled() ? "근처 식당을 찾는 중…" : "샘플 데이터 불러오는 중…");
+
+  try {
+    const { usingDummy, places } = await searchNearby({ dong, keyword: menu.name });
+    renderRestaurants(places, usingDummy);
+  } catch (err) {
+    setNearStatus(err?.message ?? "검색 중 문제가 생겼어요.");
+  } finally {
+    els.nearBtn.disabled = false;
+  }
+}
+
+function saveDong(dong) {
+  try {
+    localStorage.setItem(DONG_STORAGE_KEY, dong);
+  } catch {
+    /* 저장 실패는 무시 (시크릿 모드 등) */
+  }
+}
+
+function loadDong() {
+  try {
+    return localStorage.getItem(DONG_STORAGE_KEY) ?? "";
+  } catch {
+    return "";
+  }
 }
 
 // --- 룰렛 연출 ---
@@ -210,6 +335,13 @@ function init() {
   els.spinBtn.addEventListener("click", spin);
   els.resetBtn.addEventListener("click", handleReset);
   els.soloSwitch.addEventListener("click", toggleSolo);
+
+  // 근처 식당 검색
+  els.dongInput.value = loadDong();
+  els.nearBtn.addEventListener("click", handleNearSearch);
+  els.dongInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") handleNearSearch();
+  });
 
   recomputeCandidates();
   syncFilterUI();

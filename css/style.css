@@ -265,6 +265,137 @@ button {
   opacity: 0.55;
 }
 
+/* ===== 근처 식당 ===== */
+.near-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: var(--color-surface);
+  border-radius: var(--radius-btn);
+  border: 1.5px solid var(--color-border);
+  padding: var(--space-4);
+}
+
+.near-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+
+.near-search {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.dong-input {
+  flex: 1;
+  min-width: 0;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-btn);
+  background: var(--color-bg);
+  color: var(--color-text);
+  padding: var(--space-3) var(--space-4);
+  min-height: 48px;
+  font-family: inherit;
+  font-size: 15px;
+}
+
+.dong-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.dong-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.btn-near {
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--radius-btn);
+  background: var(--color-primary);
+  color: #fff;
+  padding: 0 var(--space-4);
+  min-height: 48px;
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.btn-near:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.btn-near:disabled {
+  background: var(--color-text-muted);
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.near-status {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.resto-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.resto-list:empty {
+  display: none;
+}
+
+.resto-item {
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.resto-item:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.resto-main {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.resto-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+a.resto-name:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.resto-cat {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: var(--color-surface-warm);
+  border-radius: var(--radius-pill);
+  padding: 2px var(--space-2);
+}
+
+.resto-meta {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
 /* ===== 필터 헤더 ===== */
 .filter-header {
   display: flex;

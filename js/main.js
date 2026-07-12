@@ -1,4 +1,4 @@
-import { CATEGORIES, TYPES, MENUS } from "./data.js";
+import { CATEGORIES, TYPES, MEALS, MENUS } from "./data.js";
 import { pickRandom } from "./recommend.js";
 import { state, recomputeCandidates, resetFilters } from "./state.js";
 import { searchNearby, isApiEnabled } from "./restaurants.js";
@@ -20,6 +20,7 @@ const els = {
   count: document.getElementById("candidate-count"),
   categoryChips: document.getElementById("category-chips"),
   typeChips: document.getElementById("type-chips"),
+  mealChips: document.getElementById("meal-chips"),
   soloSwitch: document.getElementById("solo-switch"),
   nearSection: document.getElementById("near-section"),
   nearTitle: document.getElementById("near-title"),
@@ -31,6 +32,7 @@ const els = {
 
 const categoryLabel = (id) => CATEGORIES.find((c) => c.id === id)?.label ?? id;
 const typeLabel = (id) => TYPES.find((t) => t.id === id)?.label ?? id;
+const mealLabel = (id) => MEALS.find((m) => m.id === id)?.label ?? id;
 
 const prefersReducedMotion = window.matchMedia(
   "(prefers-reduced-motion: reduce)"
@@ -47,6 +49,8 @@ function buildChips(container, items, selectedSet) {
     chip.textContent = item.label;
     if (container === els.categoryChips) {
       chip.classList.add(`chip--cat-${item.id}`);
+    } else if (container === els.mealChips) {
+      chip.classList.add(`chip--meal-${item.id}`);
     }
     chip.addEventListener("click", () => {
       if (selectedSet.has(item.id)) selectedSet.delete(item.id);
@@ -119,6 +123,13 @@ function renderResult(menu) {
   typeTag.className = "tag tag--type";
   typeTag.textContent = typeLabel(menu.type);
   els.tags.append(catTag, typeTag);
+
+  if (menu.meal) {
+    const mealTag = document.createElement("span");
+    mealTag.className = `tag tag--meal tag--meal-${menu.meal}`;
+    mealTag.textContent = mealLabel(menu.meal);
+    els.tags.append(mealTag);
+  }
 
   // scale-up 애니메이션 재시작
   els.card.classList.remove("pop");
@@ -325,6 +336,11 @@ function syncFilterUI() {
     chip.setAttribute("aria-pressed", active ? "true" : "false");
     chip.classList.toggle("is-active", active);
   });
+  els.mealChips.querySelectorAll(".chip").forEach((chip) => {
+    const active = state.filters.meals.has(chip.dataset.id);
+    chip.setAttribute("aria-pressed", active ? "true" : "false");
+    chip.classList.toggle("is-active", active);
+  });
   els.soloSwitch.setAttribute("aria-checked", state.filters.soloOnly ? "true" : "false");
   els.soloSwitch.classList.toggle("is-on", state.filters.soloOnly);
 }
@@ -333,6 +349,7 @@ function syncFilterUI() {
 function init() {
   buildChips(els.categoryChips, CATEGORIES, state.filters.categories);
   buildChips(els.typeChips, TYPES, state.filters.types);
+  buildChips(els.mealChips, MEALS, state.filters.meals);
 
   els.spinBtn.addEventListener("click", spin);
   els.resetBtn.addEventListener("click", handleReset);

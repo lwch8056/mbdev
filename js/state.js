@@ -6,6 +6,7 @@ export const state = {
   filters: {
     categories: new Set(),
     types: new Set(),
+    meals: new Set(),
     soloOnly: true,
   },
   candidates: [],
@@ -23,6 +24,7 @@ export function recomputeCandidates() {
 export function resetFilters() {
   state.filters.categories.clear();
   state.filters.types.clear();
+  state.filters.meals.clear();
   state.filters.soloOnly = true;
   recomputeCandidates();
 }

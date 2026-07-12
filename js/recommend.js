@@ -1,12 +1,13 @@
 // 순수 함수 모듈: 외부 상태에 의존하지 않음
 
-// filters: { categories:Set, types:Set, soloOnly:boolean }
+// filters: { categories:Set, types:Set, meals:Set, soloOnly:boolean }
 // 빈 Set은 "전체 허용"으로 취급한다.
 export function filterMenus(menus, filters) {
-  const { categories, types, soloOnly } = filters;
+  const { categories, types, meals, soloOnly } = filters;
   return menus.filter((menu) => {
     if (categories.size > 0 && !categories.has(menu.category)) return false;
     if (types.size > 0 && !types.has(menu.type)) return false;
+    if (meals && meals.size > 0 && !meals.has(menu.meal)) return false;
     if (soloOnly && menu.soloFriendly !== true) return false;
     return true;
   });

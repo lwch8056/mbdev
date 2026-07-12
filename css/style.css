@@ -21,6 +21,11 @@
   --cat-snack: #E8A0BF;
   --cat-fastfood: #F4B400;
 
+  /* 식사/간식/사이드색 */
+  --meal-meal: #3A7CA5;
+  --meal-snack: #C77DAE;
+  --meal-side: #A9764B;
+
   /* 라운드 */
   --radius-card: 24px;
   --radius-btn: 16px;
@@ -172,6 +177,11 @@ button {
 .tag--cat-western  { background: rgba(92, 141, 110, 0.15);  color: var(--cat-western); }
 .tag--cat-snack    { background: rgba(232, 160, 191, 0.18); color: #C76A93; }
 .tag--cat-fastfood { background: rgba(244, 180, 0, 0.18);   color: #B08400; }
+
+/* 식사/간식/사이드 태그 */
+.tag--meal-meal  { background: rgba(58, 124, 165, 0.15);  color: var(--meal-meal); }
+.tag--meal-snack { background: rgba(199, 125, 174, 0.16); color: var(--meal-snack); }
+.tag--meal-side  { background: rgba(169, 118, 75, 0.16);  color: var(--meal-side); }
 
 /* 결과 등장 애니메이션 */
 @keyframes pop-in {
@@ -452,6 +462,11 @@ a.resto-name:hover {
 .chip--cat-western.is-active  { background: var(--cat-western);  border-color: var(--cat-western); }
 .chip--cat-snack.is-active    { background: var(--cat-snack);    border-color: var(--cat-snack); }
 .chip--cat-fastfood.is-active { background: var(--cat-fastfood); border-color: var(--cat-fastfood); }
+
+/* 식사/간식/사이드 칩: 활성 시 구분 컬러 */
+.chip--meal-meal.is-active  { background: var(--meal-meal);  border-color: var(--meal-meal); }
+.chip--meal-snack.is-active { background: var(--meal-snack); border-color: var(--meal-snack); }
+.chip--meal-side.is-active  { background: var(--meal-side);  border-color: var(--meal-side); }
 
 /* ===== 혼밥친화 스위치 ===== */
 .switch-row {
